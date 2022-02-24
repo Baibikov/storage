@@ -1,0 +1,12 @@
+version: '3.1'
+
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "9898:5432"
+    environment:
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: fld
+      POSTGRES_USER: admin

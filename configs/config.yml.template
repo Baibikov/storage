@@ -1,0 +1,2 @@
+db:
+  conn: YOUR_DATABASE_CONNECTION
