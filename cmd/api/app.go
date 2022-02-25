@@ -33,7 +33,7 @@ func app() (err error) {
 	serv := service.New(repo)
 
 	log.Info("initialize http API")
-	err = http.New(serv).Listen(":9092")
+	err = http.New(serv).Listen(":" + conf.HTTP.Port)
 	if err != nil {
 		return errors.Wrap(err, "lister server")
 	}
