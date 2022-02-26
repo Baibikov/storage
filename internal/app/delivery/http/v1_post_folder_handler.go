@@ -10,8 +10,8 @@ import (
 )
 
 type FolderRequest struct {
-	Name	 string 	`json:"name"`
-	Parent 		int  	`json:"parent"`
+	Name   string `json:"name"`
+	Parent int    `json:"parent"`
 }
 
 func (h Handler) v1PostFolderHandler(c *fiber.Ctx) error {
@@ -26,14 +26,11 @@ func (h Handler) v1PostFolderHandler(c *fiber.Ctx) error {
 	}
 
 	uid, err := h.service.CreateFolder(c.Context(), types.Folder{
-		Name: fr.Name,
-		Parent: fr.Parent,
+		Name:  fr.Name,
+		Level: fr.Parent,
 	})
 	if err != nil {
-		return fibererr.CauseBadRequest(
-			c,
-			err,
-		)
+		return fibererr.CauseBadRequest(c, err)
 	}
 
 	return fibererr.CauseBadRequest(c, c.JSON(response.V1FolderPost{

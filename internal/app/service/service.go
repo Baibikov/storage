@@ -21,7 +21,7 @@ func New(storage *repository.Storage) *UseCase {
 
 const (
 	folderNameLength = 3
-	copyName = "(copy)"
+	copyName         = "(copy)"
 )
 
 func (u *UseCase) CreateFolder(ctx context.Context, folder types.Folder) (uid string, err error) {
@@ -33,7 +33,7 @@ func (u *UseCase) CreateFolder(ctx context.Context, folder types.Folder) (uid st
 		)
 	}
 
-	exist, err := u.storage.Folder.NameExists(ctx, folder.Name, folder.Parent)
+	exist, err := u.storage.Folder.NameExists(ctx, folder.Name, folder.Level)
 	if err != nil {
 		return "", errors.Wrap(
 			err,
@@ -70,4 +70,11 @@ func (u *UseCase) GetFolder(ctx context.Context, uid string) (folder types.Folde
 	}
 
 	return folder, nil
+}
+
+func (u *UseCase) GetFolderDirectory(ctx context.Context, uid string, level int) (
+	folders []types.Folder,
+	err error,
+) {
+	return u.storage.Folder.GetDirectoryByOneLevel(ctx, uid, level, level+1)
 }

@@ -12,7 +12,8 @@ import (
 type Folder interface {
 	Get(ctx context.Context, uid string) (types.Folder, error)
 	Create(ctx context.Context, file types.Folder) (uid string, err error)
-	NameExists(ctx context.Context, name string, parent int) (exists bool, err error)
+	NameExists(ctx context.Context, name string, level int) (exists bool, err error)
+	GetDirectoryByOneLevel(ctx context.Context, uid string, level, before int) (folders []types.Folder, err error)
 }
 
 type Storage struct {

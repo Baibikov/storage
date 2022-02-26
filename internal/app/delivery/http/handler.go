@@ -7,20 +7,20 @@ import (
 )
 
 type Handler struct {
-	app *fiber.App
+	app     *fiber.App
 	service *service.UseCase
 }
 
 func New(service *service.UseCase) *Handler {
 	handler := &Handler{
-		app: fiber.New(),
+		app:     fiber.New(),
 		service: service,
 	}
 
 	v1 := handler.app.Group("/api/v1")
-	v1.Get("/folder", handler.v1GetFolderHandler)
+	v1.Get("/folder/:uid", handler.v1GetFolderHandler)
 	v1.Post("/folder", handler.v1PostFolderHandler)
-
+	v1.Get("/folder/directory/:uid/:level", handler.v1GetFolderDirectoryHandler)
 	return handler
 }
 

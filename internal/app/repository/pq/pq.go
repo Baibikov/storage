@@ -26,6 +26,7 @@ func (f *File) Get(ctx context.Context, uid string) (file types.Folder, err erro
 		select 
 		    uid,
 		    name,
+		    level,
 		    created_at
 		from file.folders
 		where uid = $1
@@ -42,35 +43,72 @@ func (f *File) Get(ctx context.Context, uid string) (file types.Folder, err erro
 	)
 }
 
-
 func (f *File) Create(ctx context.Context, file types.Folder) (uid string, err error) {
 	query := `
-		insert into file.folders(name, parent) 
+		insert into file.folders(name, level) 
 		values($1, $2)
 		returning uid
 	`
 
 	return uid, sqlerr.WithSql(
-		f.db.GetContext(ctx, &uid, query, file.Name, file.Parent),
+		f.db.GetContext(ctx, &uid, query, file.Name, file.Level),
 		query,
 		file.Name,
-		file.Parent,
+		file.Level,
 	)
 }
 
-func (f *File) NameExists(ctx context.Context, name string, parent int) (exists bool, err error) {
+func (f *File) NameExists(ctx context.Context, name string, level int) (exists bool, err error) {
 	query := `
 		select exists(
 		    select 
 		    from file.folders 
 		    where 
-		          name = $1 and parent = $2
+		          name = $1 and level = $2
 		)
 	`
 	return exists, sqlerr.WithSql(
-		f.db.GetContext(ctx, &exists, query, name, parent),
+		f.db.GetContext(ctx, &exists, query, name, level),
 		query,
 		name,
-		parent,
+		level,
+	)
+}
+
+func (f *File) GetDirectoryByOneLevel(ctx context.Context, uid string, level, before int) (folders []types.Folder, err error) {
+	query := `
+		with recursive directory_tree as (
+			select
+				   uid,
+				   name,
+				   level
+			from file.folders
+			where
+				  uid = $1
+			union all
+			select
+				   fld.uid,
+				   fld.name,
+				   fld.level
+			from file.folders fld
+				inner join directory_tree on true
+				inner join file.folder_directory fd
+					on fd.uid_parent = directory_tree.uid and fd.uid_child = fld.uid
+			where fld.level = directory_tree.level+1
+			  and fld.level <= $3
+		)
+		select
+			   uid,
+			   name,
+			   level
+		from directory_tree
+		where level != $2;
+	`
+	return folders, sqlerr.WithSql(
+		f.db.SelectContext(ctx, &folders, query, uid, level, before),
+		query,
+		uid,
+		level,
+		before,
 	)
 }
