@@ -78,3 +78,12 @@ func (u *UseCase) GetFolderDirectory(ctx context.Context, uid string, level int)
 ) {
 	return u.storage.Folder.GetDirectoryByOneLevel(ctx, uid, level, level+1)
 }
+
+func (u *UseCase) DeleteFolder(ctx context.Context, uid string) error {
+	uids, err := u.storage.Folder.GetDirectoryUids(ctx, uid)
+	if err != nil {
+		return err
+	}
+
+	return u.storage.Folder.DeleteDirectory(ctx, uids)
+}

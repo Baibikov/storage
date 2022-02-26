@@ -14,3 +14,7 @@ type V1FolderPost struct {
 }
 
 type V1FolderDirectoryGet []V1FolderGet
+
+type V1FolderDelete struct {
+	Message string `json:"message"`
+}

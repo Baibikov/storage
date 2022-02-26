@@ -5,9 +5,11 @@ import (
 	"database/sql"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
 	"storage/internal/app/types"
+	"storage/pkg/dbutils"
 	"storage/pkg/sqlerr"
 )
 
@@ -49,7 +51,6 @@ func (f *File) Create(ctx context.Context, file types.Folder) (uid string, err e
 		values($1, $2)
 		returning uid
 	`
-
 	return uid, sqlerr.WithSql(
 		f.db.GetContext(ctx, &uid, query, file.Name, file.Level),
 		query,
@@ -84,7 +85,7 @@ func (f *File) GetDirectoryByOneLevel(ctx context.Context, uid string, level, be
 				   level
 			from file.folders
 			where
-				  uid = $1
+				  uid = $1::uuid
 			union all
 			select
 				   fld.uid,
@@ -110,5 +111,69 @@ func (f *File) GetDirectoryByOneLevel(ctx context.Context, uid string, level, be
 		uid,
 		level,
 		before,
+	)
+}
+
+func (f *File) GetDirectoryUids(ctx context.Context, uid string) (uids []string, err error) {
+	query := `
+		with recursive directory_tree as (
+			select
+				uid,
+				level
+			from file.folders
+			where uid = $1::uuid
+			union all
+			select
+				fld.uid,
+				fld.level
+			from file.folders fld
+					 inner join directory_tree on true
+					 inner join file.folder_directory fd
+								on fd.uid_parent = directory_tree.uid and fd.uid_child = fld.uid
+			where fld.level = directory_tree.level+1
+		)
+		select array_agg(uid) from directory_tree
+	`
+	var uidStringArray pq.StringArray
+	err = sqlerr.WithSql(f.db.GetContext(ctx, &uidStringArray, query, uid), query, uid)
+	if err != nil {
+		return nil, err
+	}
+
+	uids = uidStringArray
+	return uids, nil
+}
+
+func (f *File) DeleteDirectory(ctx context.Context, uids []string) (err error) {
+	return dbutils.WrapTx(f.db, func(tx *sqlx.Tx) error {
+		err = deleteFromFolderDirectory(ctx, tx, uids)
+		if err != nil {
+			return err
+		}
+		return deleteFromFoldersTx(ctx, tx, uids)
+	})
+}
+
+func deleteFromFolderDirectory(ctx context.Context, tx sqlx.ExtContext, uids []string) error {
+	query := `
+		delete from file.folder_directory where uid_parent = any($1)
+	`
+	_, err := tx.ExecContext(ctx, query, pq.Array(uids))
+	return sqlerr.WithSql(
+		err,
+		query,
+		uids,
+	)
+}
+
+func deleteFromFoldersTx(ctx context.Context, tx sqlx.ExtContext, uids []string) error {
+	query := `
+		delete from file.folders where uid = any($1)
+	`
+	_, err := tx.ExecContext(ctx, query, pq.Array(uids))
+	return sqlerr.WithSql(
+		err,
+		query,
+		uids,
 	)
 }
