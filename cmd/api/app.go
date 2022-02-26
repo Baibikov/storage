@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"go.uber.org/multierr"
+	"golang.org/x/sync/errgroup"
 
 	"storage/internal/app/delivery/http"
 	"storage/internal/app/repository"
@@ -32,11 +33,13 @@ func app() (err error) {
 	log.Info("initialize service")
 	serv := service.New(repo)
 
-	log.Info("initialize http API")
-	err = http.New(serv).Listen(":" + conf.HTTP.Port)
-	if err != nil {
-		return errors.Wrap(err, "lister server")
-	}
+	log.Info("initialize wait err group")
+	wg := errgroup.Group{}
 
-	return err
+	log.Info("initialize http API")
+	wg.Go(func() error {
+		return http.New(serv).Listen(":" + conf.HTTP.Port)
+	})
+
+	return wg.Wait()
 }
