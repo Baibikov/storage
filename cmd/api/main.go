@@ -9,7 +9,7 @@ import (
 	"storage/configs"
 )
 
-const(
+const (
 	configPath = "./configs/config.yml"
 )
 
@@ -31,11 +31,9 @@ func init() {
 	}
 }
 
-
-func main()  {
+func main() {
 	err := app()
 	if err != nil {
-		log.Fatalln(err)
+		log.Error(err)
 	}
 }
-
