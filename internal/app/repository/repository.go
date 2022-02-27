@@ -18,12 +18,19 @@ type Folder interface {
 	DeleteDirectory(ctx context.Context, uids []string) (err error)
 }
 
+type File interface {
+	Create(ctx context.Context, file types.File) (uid string, err error)
+	Remove(ctx context.Context, uid string) (err error)
+}
+
 type Storage struct {
 	Folder Folder
+	File   File
 }
 
 func New(db *sqlx.DB) *Storage {
 	return &Storage{
-		Folder: pq.NewFile(db),
+		Folder: pq.NewFolder(db),
+		File:   pq.NewFile(db),
 	}
 }

@@ -13,17 +13,17 @@ import (
 	"storage/pkg/sqlerr"
 )
 
-type File struct {
+type Folder struct {
 	db *sqlx.DB
 }
 
-func NewFile(db *sqlx.DB) *File {
-	return &File{
+func NewFolder(db *sqlx.DB) *Folder {
+	return &Folder{
 		db: db,
 	}
 }
 
-func (f *File) Get(ctx context.Context, uid string) (file types.Folder, err error) {
+func (f *Folder) Get(ctx context.Context, uid string) (file types.Folder, err error) {
 	query := `
 		select 
 		    uid,
@@ -45,7 +45,7 @@ func (f *File) Get(ctx context.Context, uid string) (file types.Folder, err erro
 	)
 }
 
-func (f *File) Create(ctx context.Context, file types.Folder) (uid string, err error) {
+func (f *Folder) Create(ctx context.Context, file types.Folder) (uid string, err error) {
 	query := `
 		insert into file.folders(name, level) 
 		values($1, $2)
@@ -59,7 +59,7 @@ func (f *File) Create(ctx context.Context, file types.Folder) (uid string, err e
 	)
 }
 
-func (f *File) NameExists(ctx context.Context, name string, level int) (exists bool, err error) {
+func (f *Folder) NameExists(ctx context.Context, name string, level int) (exists bool, err error) {
 	query := `
 		select exists(
 		    select 
@@ -76,7 +76,7 @@ func (f *File) NameExists(ctx context.Context, name string, level int) (exists b
 	)
 }
 
-func (f *File) GetDirectoryByOneLevel(ctx context.Context, uid string, level, before int) (folders []types.Folder, err error) {
+func (f *Folder) GetDirectoryByOneLevel(ctx context.Context, uid string, level, before int) (folders []types.Folder, err error) {
 	query := `
 		with recursive directory_tree as (
 			select
@@ -114,7 +114,7 @@ func (f *File) GetDirectoryByOneLevel(ctx context.Context, uid string, level, be
 	)
 }
 
-func (f *File) GetDirectoryUids(ctx context.Context, uid string) (uids []string, err error) {
+func (f *Folder) GetDirectoryUids(ctx context.Context, uid string) (uids []string, err error) {
 	query := `
 		with recursive directory_tree as (
 			select
@@ -144,7 +144,7 @@ func (f *File) GetDirectoryUids(ctx context.Context, uid string) (uids []string,
 	return uids, nil
 }
 
-func (f *File) DeleteDirectory(ctx context.Context, uids []string) (err error) {
+func (f *Folder) DeleteDirectory(ctx context.Context, uids []string) (err error) {
 	return dbutils.WrapTx(f.db, func(tx *sqlx.Tx) error {
 		err = deleteFromFolderDirectory(ctx, tx, uids)
 		if err != nil {

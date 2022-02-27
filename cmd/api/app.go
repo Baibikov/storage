@@ -31,7 +31,7 @@ func app() (err error) {
 	repo := repository.New(db)
 
 	log.Info("initialize service")
-	serv := service.New(repo)
+	serv := service.New(repo, conf.Storage)
 
 	log.Info("initialize wait err group")
 	wg := errgroup.Group{}

@@ -1,8 +1,9 @@
 package configs
 
 type Conf struct {
-	DB   DB   `yaml:"db"`
-	HTTP HTTP `yaml:"http"`
+	DB      DB      `yaml:"db"`
+	HTTP    HTTP    `yaml:"http"`
+	Storage Storage `yaml:"storage"`
 }
 
 type DB struct {
@@ -11,4 +12,8 @@ type DB struct {
 
 type HTTP struct {
 	Port string `yaml:"port"`
+}
+
+type Storage struct {
+	SRC string `yaml:"src"`
 }
