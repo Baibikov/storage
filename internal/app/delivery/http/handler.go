@@ -18,10 +18,10 @@ func New(service *service.UseCase) *Handler {
 	}
 
 	v1 := handler.app.Group("/api/v1")
-	v1.Get("/folder/:uid", handler.v1GetFolderHandler)
-	v1.Delete("/folder/:uid", handler.v1DeleteFolderHandler)
-	v1.Post("/folder", handler.v1PostFolderHandler)
-	v1.Get("/folder/directory/:uid/:level", handler.v1GetFolderDirectoryHandler)
+	v1.Get("/folders/:uid", handler.v1GetFolderHandler)
+	v1.Delete("/folders/:uid", handler.v1DeleteFolderHandler)
+	v1.Post("/folders", handler.v1PostFolderHandler)
+	v1.Get("/folders/:uid/:level", handler.v1GetFolderDirectoryHandler)
 	return handler
 }
 
